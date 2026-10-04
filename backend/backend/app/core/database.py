@@ -1,4 +1,3 @@
-
 import os
 from pathlib import Path
 import re
@@ -18,7 +17,12 @@ else:
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL is not configured in .env")
+    raise RuntimeError("DATABASE_URL is not configured in environment or .env")
+
+# Cloud providers (Render, Supabase, Neon) often provide postgres:// instead of postgresql://
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 
 def _sanitize_db_url(url: str) -> str:
     pattern = r"^(?P<prefix>[a-zA-Z0-9+_-]+://)(?P<user>[^:]+):(?P<password>.+)@(?P<host>[^@/:]+)(?P<port>:\d+)?(?P<rest>/.*)?$"
@@ -29,13 +33,13 @@ def _sanitize_db_url(url: str) -> str:
         return f"{m.group('prefix')}{m.group('user')}:{safe_pwd}@{m.group('host')}{m.group('port') or ''}{m.group('rest') or ''}"
     return url
 
+
 SAFE_DATABASE_URL = _sanitize_db_url(DATABASE_URL)
 
 engine = create_engine(
     SAFE_DATABASE_URL,
     pool_pre_ping=True,
 )
-
 
 SessionLocal = sessionmaker(
     autocommit=False,
