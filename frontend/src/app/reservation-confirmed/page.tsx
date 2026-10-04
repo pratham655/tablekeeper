@@ -1,9 +1,9 @@
-
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import Navbar from "../../components/Navbar";
 
 function ReservationConfirmedContent() {
   const searchParams = useSearchParams();
@@ -16,20 +16,27 @@ function ReservationConfirmedContent() {
   const guests = searchParams.get("guests") || "2";
   const table = searchParams.get("table") || "T1";
   const name = searchParams.get("name") || "Guest";
+  const reference = searchParams.get("reference") || "";
+  const status = searchParams.get("status") || "confirmed";
 
-  const [confirmationNumber, setConfirmationNumber] = useState("");
+  const [bookingRef, setBookingRef] = useState(reference);
 
   useEffect(() => {
-    const bookingKey = `tablekeeper_confirmation_${restaurant}_${date}_${time}_${guests}_${table}_${name}`;
-    let savedNumber = sessionStorage.getItem(bookingKey);
-
-    if (!savedNumber) {
-      savedNumber = `TK-${Math.floor(10000000 + Math.random() * 90000000)}`;
-      sessionStorage.setItem(bookingKey, savedNumber);
+    if (reference) {
+      setBookingRef(reference);
+    } else {
+      // Check session storage fallback
+      try {
+        const raw = sessionStorage.getItem("tablekeeper_pending_reservation");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed.bookingReference) {
+            setBookingRef(parsed.bookingReference);
+          }
+        }
+      } catch {}
     }
-
-    setConfirmationNumber(savedNumber);
-  }, [restaurant, date, time, guests, table, name]);
+  }, [reference]);
 
   function formatDate(rawDate?: string) {
     if (!rawDate) return "Date not specified";
@@ -46,38 +53,7 @@ function ReservationConfirmedContent() {
   return (
     <main className="min-h-screen bg-[#f8f7f2] text-[#20251f]">
       {/* NAVBAR */}
-      <header className="sticky top-0 z-40 border-b border-[#e9e7df] bg-[#f8f7f2]/95 backdrop-blur-xl">
-        <div className="container-shell flex h-[76px] items-center justify-between">
-          <Link href="/" className="flex items-center gap-3" aria-label="Tablekeeper home">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#244b38] text-xl font-semibold text-white shadow-xs">
-              t.
-            </span>
-            <span>
-              <span className="block text-[19px] font-semibold leading-5 tracking-[-0.7px]">
-                tablekeeper
-              </span>
-              <span className="mt-1 hidden text-[9px] font-semibold uppercase tracking-[2px] text-[#85877d] sm:block">
-                A table worth keeping
-              </span>
-            </span>
-          </Link>
-
-          <nav className="flex items-center gap-4 sm:gap-7">
-            <Link
-              href="/"
-              className="text-xs font-semibold text-[#5a6258] transition hover:text-[#244b38]"
-            >
-              Discover
-            </Link>
-            <Link
-              href="/reservations"
-              className="rounded-full border border-[#d9ddd4] bg-white px-4 py-2 text-xs font-semibold transition hover:border-[#244b38] hover:bg-[#244b38] hover:text-white"
-            >
-              My reservations
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Navbar />
 
       {/* CONFIRMATION TICKET SECTION */}
       <section className="container-shell py-12 sm:py-16">
@@ -97,17 +73,17 @@ function ReservationConfirmedContent() {
           </h1>
 
           <p className="mx-auto mt-2 max-w-lg text-xs leading-relaxed text-[#777d73] sm:text-sm">
-            We have confirmed your table request at{" "}
-            <span className="font-semibold text-[#244b38]">{restaurant}</span>. Your reservation reference is ready below.
+            We have confirmed your table reservation at{" "}
+            <span className="font-semibold text-[#244b38]">{restaurant}</span>. Your official booking reference is ready below.
           </p>
 
           {/* REFERENCE BADGE */}
           <div className="mx-auto mt-6 inline-flex items-center gap-2 rounded-full border border-[#e5e7dc] bg-[#f8faf6] px-5 py-2.5 shadow-xs">
             <span className="text-[10px] font-bold uppercase tracking-widest text-[#777d73]">
-              Ref:
+              Booking Ref:
             </span>
             <span className="text-xs font-bold tracking-wider text-[#244b38]">
-              {confirmationNumber || "TK-PENDING"}
+              {bookingRef || "CONFIRMED"}
             </span>
           </div>
 
@@ -132,7 +108,7 @@ function ReservationConfirmedContent() {
                   Reserved Table
                 </p>
                 <p className="mt-0.5 text-xs font-bold text-[#8c6b32]">
-                  Table {table}
+                  Table #{table}
                 </p>
               </div>
 
@@ -169,7 +145,7 @@ function ReservationConfirmedContent() {
                 </p>
                 <p className="mt-0.5 inline-flex items-center gap-1.5 text-xs font-bold text-[#244b38]">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#244b38]" />
-                  Booking Confirmed
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
                 </p>
               </div>
             </div>
@@ -194,7 +170,7 @@ function ReservationConfirmedContent() {
 
           {/* NOTICE */}
           <p className="mx-auto mt-6 max-w-md text-center text-[10px] leading-relaxed text-[#92958c]">
-            This reservation is recorded in your browser session for the Tablekeeper prototype experience.
+            This booking is registered in the Tablekeeper database. A confirmation email has been dispatched.
           </p>
         </div>
       </section>

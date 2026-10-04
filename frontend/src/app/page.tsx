@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { matchesNaturalSearch, parseNaturalSearch } from "../lib/naturalSearch";
 import PersonalizedRanking from "../components/PersonalizedRanking";
 import AIConcierge from "../components/AIConcierge";
+import Navbar from "../components/Navbar";
 
 type Restaurant = {
   id: number;
@@ -183,65 +184,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#f8f7f2] text-[#20251f]">
       {/* Navigation Header */}
-      <header className="sticky top-0 z-50 border-b border-[#e9e7df] bg-[#f8f7f2]/95 backdrop-blur-xl">
-        <div className="container-shell flex h-[76px] items-center justify-between">
-          <Link href="/" className="flex items-center gap-3" aria-label="Tablekeeper home">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#244b38] text-xl font-semibold text-white shadow-xs">
-              t.
-            </span>
-            <span>
-              <span className="block text-[19px] font-semibold leading-5 tracking-[-0.7px]">
-                tablekeeper
-              </span>
-              <span className="mt-1 hidden text-[9px] font-semibold uppercase tracking-[2.2px] text-[#85877d] sm:block">
-                A table worth keeping
-              </span>
-            </span>
-          </Link>
-
-          <nav className="hidden items-center gap-8 md:flex">
-            <a
-              href="#restaurants"
-              className="text-xs font-semibold text-[#5a6258] transition hover:text-[#244b38]"
-            >
-              Discover
-            </a>
-            <a
-              href="#how-it-works"
-              className="text-xs font-semibold text-[#5a6258] transition hover:text-[#244b38]"
-            >
-              How it works
-            </a>
-            <Link
-              href="/login"
-              className="rounded-full px-4 py-2.5 text-xs font-semibold text-[#244b38] transition hover:bg-[#e9eee6]"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/reservations"
-              className="rounded-full border border-[#d9ddd4] bg-white px-5 py-2.5 text-xs font-semibold text-[#20251f] transition hover:border-[#244b38] hover:bg-[#244b38] hover:text-white"
-            >
-              My reservations
-            </Link>
-          </nav>
-
-          <div className="flex items-center gap-2 md:hidden">
-            <Link
-              href="/login"
-              className="rounded-full border border-[#d9ddd4] bg-white px-3 py-2.5 text-xs font-semibold text-[#244b38]"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/reservations"
-              className="rounded-full bg-[#244b38] px-4 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#183727] md:hidden"
-            >
-              My bookings
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-[#244b38] text-white">

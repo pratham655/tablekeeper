@@ -11,6 +11,7 @@ class RestaurantTableUpdate(BaseModel):
     table_number: str | None = Field(default=None, min_length=1, max_length=30)
     capacity: int | None = Field(default=None, gt=0, le=50)
     is_active: bool | None = None
+    status: str | None = Field(default=None, max_length=30)
 
 
 class RestaurantTableResponse(BaseModel):
@@ -21,3 +22,4 @@ class RestaurantTableResponse(BaseModel):
     table_number: str
     capacity: int
     is_active: bool
+    status: str = "available"

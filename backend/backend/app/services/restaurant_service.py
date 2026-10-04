@@ -3,7 +3,11 @@ from sqlalchemy.orm import Session
 
 from app.models.restaurant import Restaurant
 from app.models.user import User
-from app.schemas.restaurant import RestaurantCreate, RestaurantUpdate
+from app.schemas.restaurant import (
+    RestaurantCreate,
+    RestaurantPolicyUpdate,
+    RestaurantUpdate,
+)
 from app.services.transaction import transaction
 
 
@@ -33,6 +37,11 @@ UPDATABLE_FIELDS = {
     "price_range",
     "phone",
     "image_url",
+    "cancellation_hours",
+    "late_arrival_minutes",
+    "reservation_duration_minutes",
+    "max_party_size",
+    "policy_terms",
 }
 
 # Fields that must never be set to None.
@@ -107,7 +116,6 @@ def update_restaurant(
             .with_for_update()
         )
         if restaurant is None:
-            # Same message for "missing" and "not yours" so IDs can't be probed.
             raise RestaurantNotFoundError("Restaurant not found")
 
         for field, value in update_data.items():
@@ -117,3 +125,91 @@ def update_restaurant(
 
     db.refresh(restaurant)
     return restaurant
+
+
+def get_owner_restaurants(
+    db: Session,
+    owner_id: int,
+) -> list[Restaurant]:
+    """Return all active restaurants belonging to the authenticated owner."""
+    return list(
+        db.scalars(
+            select(Restaurant)
+            .where(
+                Restaurant.owner_id == owner_id,
+                Restaurant.is_active.is_(True),
+            )
+            .order_by(Restaurant.id.asc())
+        ).all()
+    )
+
+
+def get_restaurant_policies(
+    db: Session,
+    restaurant_id: int,
+) -> dict:
+    """Retrieve current booking policies for a restaurant."""
+    restaurant = db.scalar(
+        select(Restaurant).where(
+            Restaurant.id == restaurant_id,
+            Restaurant.is_active.is_(True),
+        )
+    )
+    if restaurant is None:
+        raise RestaurantNotFoundError("Restaurant not found")
+
+    return {
+        "restaurant_id": restaurant.id,
+        "restaurant_name": restaurant.name,
+        "cancellation_hours": restaurant.cancellation_hours,
+        "late_arrival_minutes": restaurant.late_arrival_minutes,
+        "reservation_duration_minutes": restaurant.reservation_duration_minutes,
+        "max_party_size": restaurant.max_party_size,
+        "policy_terms": restaurant.policy_terms,
+        "policy_version": restaurant.policy_version,
+    }
+
+
+def update_restaurant_policies(
+    db: Session,
+    restaurant_id: int,
+    owner_id: int,
+    policy_data: RestaurantPolicyUpdate,
+) -> dict:
+    """
+    Update booking policies for an owned restaurant and increment the policy version.
+    """
+    with transaction(db):
+        restaurant = db.scalar(
+            select(Restaurant)
+            .where(
+                Restaurant.id == restaurant_id,
+                Restaurant.owner_id == owner_id,
+                Restaurant.is_active.is_(True),
+            )
+            .with_for_update()
+        )
+        if restaurant is None:
+            raise RestaurantNotFoundError("Restaurant not found or unauthorized")
+
+        restaurant.cancellation_hours = policy_data.cancellation_hours
+        restaurant.late_arrival_minutes = policy_data.late_arrival_minutes
+        restaurant.reservation_duration_minutes = policy_data.reservation_duration_minutes
+        restaurant.max_party_size = policy_data.max_party_size
+        restaurant.policy_terms = policy_data.policy_terms
+        # Automatically increment policy version when rules change
+        restaurant.policy_version = (restaurant.policy_version or 1) + 1
+
+        db.flush()
+
+    db.refresh(restaurant)
+    return {
+        "restaurant_id": restaurant.id,
+        "restaurant_name": restaurant.name,
+        "cancellation_hours": restaurant.cancellation_hours,
+        "late_arrival_minutes": restaurant.late_arrival_minutes,
+        "reservation_duration_minutes": restaurant.reservation_duration_minutes,
+        "max_party_size": restaurant.max_party_size,
+        "policy_terms": restaurant.policy_terms,
+        "policy_version": restaurant.policy_version,
+    }

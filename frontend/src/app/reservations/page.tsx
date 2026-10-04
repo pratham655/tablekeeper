@@ -1,9 +1,9 @@
-
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Navbar from "../../components/Navbar";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
@@ -17,7 +17,13 @@ type BackendReservation = {
   guest_count: number;
   start_time: string;
   end_time: string;
-  status: "pending" | "confirmed" | "cancelled" | string;
+  status: "pending" | "confirmed" | "cancelled" | "seated" | "completed" | string;
+  customer_name?: string;
+  customer_email?: string;
+  customer_phone?: string;
+  special_request?: string;
+  policy_version_accepted?: number;
+  accepted_policy_terms?: string;
   created_at: string;
   updated_at: string;
 };
@@ -32,6 +38,11 @@ type Reservation = {
   startTime: string;
   endTime: string;
   status: string;
+  customerName?: string;
+  specialRequest?: string;
+  policyVersion?: number;
+  policyTerms?: string;
+  createdAt: string;
 };
 
 const RESTAURANTS: Record<number, string> = {
@@ -42,6 +53,17 @@ const RESTAURANTS: Record<number, string> = {
   18: "The Terrace",
   19: "Chai & Co.",
   20: "DRUMA",
+};
+
+// Map backend db IDs to frontend restaurant IDs for navigation
+const DB_TO_FRONTEND_ID: Record<number, number> = {
+  12: 1,
+  13: 2,
+  14: 3,
+  17: 4,
+  18: 5,
+  19: 6,
+  20: 7,
 };
 
 function formatDate(dateString: string) {
@@ -86,6 +108,7 @@ export default function ReservationsPage() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState("");
   const [cancellingId, setCancellingId] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<"all" | "upcoming" | "past">("all");
 
   const loadReservations = useCallback(async () => {
     const token = localStorage.getItem("tablekeeper_access_token");
@@ -132,6 +155,11 @@ export default function ReservationsPage() {
         startTime: item.start_time,
         endTime: item.end_time,
         status: item.status,
+        customerName: item.customer_name,
+        specialRequest: item.special_request,
+        policyVersion: item.policy_version_accepted,
+        policyTerms: item.accepted_policy_terms,
+        createdAt: item.created_at,
       }));
 
       setReservations(mapped);
@@ -160,7 +188,7 @@ export default function ReservationsPage() {
     }
 
     const confirmed = window.confirm(
-      "Are you sure you want to cancel this reservation?"
+      "Are you sure you want to cancel this reservation? The table will be immediately released for other diners."
     );
 
     if (!confirmed) return;
@@ -211,45 +239,22 @@ export default function ReservationsPage() {
     }
   };
 
+  const now = new Date();
+  const filteredReservations = reservations.filter((r) => {
+    const start = new Date(r.startTime);
+    if (activeTab === "upcoming") {
+      return start >= now && r.status.toLowerCase() !== "cancelled";
+    }
+    if (activeTab === "past") {
+      return start < now || r.status.toLowerCase() === "cancelled" || r.status.toLowerCase() === "completed";
+    }
+    return true;
+  });
+
   return (
     <main className="min-h-screen bg-[#f8f7f2] text-[#20251f]">
-      <header className="sticky top-0 z-40 border-b border-[#e9e7df] bg-[#f8f7f2]/95 backdrop-blur-xl">
-        <div className="container-shell flex h-[76px] items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center gap-3"
-            aria-label="Tablekeeper home"
-          >
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#244b38] text-xl font-semibold text-white shadow-xs">
-              t.
-            </span>
-
-            <span>
-              <span className="block text-[19px] font-semibold leading-5 tracking-[-0.7px]">
-                tablekeeper
-              </span>
-              <span className="mt-1 hidden text-[9px] font-semibold uppercase tracking-[2px] text-[#85877d] sm:block">
-                A table worth keeping
-              </span>
-            </span>
-          </Link>
-
-          <nav className="flex items-center gap-4 sm:gap-7">
-            <Link
-              href="/"
-              className="text-xs font-semibold text-[#5a6258] transition hover:text-[#244b38]"
-            >
-              Discover
-            </Link>
-            <Link
-              href="/"
-              className="rounded-full border border-[#d9ddd4] bg-white px-5 py-2.5 text-xs font-semibold text-[#20251f] transition hover:border-[#244b38] hover:bg-[#244b38] hover:text-white"
-            >
-              Explore restaurants ↗
-            </Link>
-          </nav>
-        </div>
-      </header>
+      {/* NAVBAR */}
+      <Navbar />
 
       <section className="container-shell pb-20 pt-10 sm:pb-24 sm:pt-14">
         <div className="mx-auto max-w-4xl">
@@ -265,14 +270,53 @@ export default function ReservationsPage() {
               </h1>
 
               <p className="mt-1.5 text-xs text-[#777d73]">
-                Keep track of your upcoming dining bookings and reserved tables.
+                Keep track of your upcoming dining bookings, reserved tables, and accepted policies.
               </p>
             </div>
 
-            <span className="rounded-full bg-[#e9eee6] px-4 py-1.5 text-xs font-bold text-[#244b38]">
-              {reservations.length}{" "}
-              {reservations.length === 1 ? "reservation" : "reservations"}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-[#e9eee6] px-4 py-1.5 text-xs font-bold text-[#244b38]">
+                {reservations.length}{" "}
+                {reservations.length === 1 ? "reservation" : "reservations"}
+              </span>
+            </div>
+          </div>
+
+          {/* TAB FILTERS */}
+          <div className="mt-7 flex gap-2 border-b border-[#e5e3da] pb-3">
+            <button
+              type="button"
+              onClick={() => setActiveTab("all")}
+              className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                activeTab === "all"
+                  ? "bg-[#244b38] text-white shadow-xs"
+                  : "bg-white text-[#5a6258] hover:bg-[#eae8df]"
+              }`}
+            >
+              All Bookings ({reservations.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("upcoming")}
+              className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                activeTab === "upcoming"
+                  ? "bg-[#244b38] text-white shadow-xs"
+                  : "bg-white text-[#5a6258] hover:bg-[#eae8df]"
+              }`}
+            >
+              Upcoming
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("past")}
+              className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                activeTab === "past"
+                  ? "bg-[#244b38] text-white shadow-xs"
+                  : "bg-white text-[#5a6258] hover:bg-[#eae8df]"
+              }`}
+            >
+              Past &amp; Cancelled
+            </button>
           </div>
 
           {error && (
@@ -295,14 +339,18 @@ export default function ReservationsPage() {
             <div className="mt-10 rounded-[26px] border border-[#e8e5db] bg-white p-12 text-center text-xs font-medium text-[#777d73]">
               Loading your dining reservations...
             </div>
-          ) : reservations.length === 0 ? (
+          ) : filteredReservations.length === 0 ? (
             <div className="mt-10 rounded-[28px] border border-[#e8e5db] bg-white px-6 py-16 text-center shadow-[0_12px_40px_rgba(31,49,34,0.04)] sm:px-12">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#e9eee6] text-2xl text-[#244b38]">
                 🍽️
               </div>
 
               <h2 className="mt-5 font-serif text-2xl text-[#20251f] sm:text-3xl">
-                No reservations yet
+                {activeTab === "all"
+                  ? "No reservations yet"
+                  : activeTab === "upcoming"
+                  ? "No upcoming reservations"
+                  : "No past reservations"}
               </h2>
 
               <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-[#777d73]">
@@ -320,10 +368,13 @@ export default function ReservationsPage() {
             </div>
           ) : (
             <div className="mt-8 space-y-5">
-              {reservations.map((reservation) => {
+              {filteredReservations.map((reservation) => {
                 const isCancelled = reservation.status.toLowerCase() === "cancelled";
+                const isSeated = reservation.status.toLowerCase() === "seated";
+                const isCompleted = reservation.status.toLowerCase() === "completed";
                 const isPending = reservation.status.toLowerCase() === "pending";
                 const isCancelling = cancellingId === reservation.id;
+                const frontendId = DB_TO_FRONTEND_ID[reservation.restaurantId] || 1;
 
                 return (
                   <article
@@ -336,7 +387,7 @@ export default function ReservationsPage() {
                           Booking Ref:
                         </span>
                         <span className="text-xs font-bold tracking-wider text-[#244b38]">
-                          {reservation.bookingReference || reservation.id}
+                          {reservation.bookingReference || `TK-RES-${reservation.id}`}
                         </span>
                       </div>
 
@@ -344,14 +395,26 @@ export default function ReservationsPage() {
                         className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
                           isCancelled
                             ? "bg-red-50 text-red-700"
+                            : isSeated
+                            ? "bg-blue-50 text-blue-700"
+                            : isCompleted
+                            ? "bg-gray-100 text-gray-700"
                             : isPending
-                              ? "bg-[#e9eee6] text-[#244b38]"
-                              : "bg-[#e9eee6] text-[#244b38]"
+                            ? "bg-amber-50 text-amber-700"
+                            : "bg-[#e9eee6] text-[#244b38]"
                         }`}
                       >
                         <span
                           className={`h-1.5 w-1.5 rounded-full ${
-                            isCancelled ? "bg-red-600" : "bg-[#244b38]"
+                            isCancelled
+                              ? "bg-red-600"
+                              : isSeated
+                              ? "bg-blue-600"
+                              : isCompleted
+                              ? "bg-gray-600"
+                              : isPending
+                              ? "bg-amber-600"
+                              : "bg-[#244b38]"
                           }`}
                         />
                         {formatStatus(reservation.status)}
@@ -359,9 +422,16 @@ export default function ReservationsPage() {
                     </div>
 
                     <div className="p-6 sm:p-8">
-                      <h2 className="font-serif text-2xl font-medium tracking-tight text-[#20251f] sm:text-3xl">
-                        {reservation.restaurantName}
-                      </h2>
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <h2 className="font-serif text-2xl font-medium tracking-tight text-[#20251f] sm:text-3xl">
+                          {reservation.restaurantName}
+                        </h2>
+                        {reservation.customerName && (
+                          <span className="text-xs text-[#777d73]">
+                            Reserved for: <strong>{reservation.customerName}</strong>
+                          </span>
+                        )}
+                      </div>
 
                       <div className="mt-4 grid grid-cols-2 gap-4 text-xs sm:grid-cols-4 sm:gap-6">
                         <div>
@@ -394,24 +464,38 @@ export default function ReservationsPage() {
 
                         <div>
                           <p className="text-[10px] font-bold uppercase tracking-wider text-[#8c9186]">
-                            Seating Table ID
+                            Table Number
                           </p>
                           <p className="mt-1 font-bold text-[#8c6b32]">
-                            #{reservation.tableId}
+                            Table #{reservation.tableId}
                           </p>
                         </div>
                       </div>
 
+                      {reservation.specialRequest && (
+                        <div className="mt-4 rounded-xl bg-[#fbfbf8] p-3 border border-[#eeece4] text-xs">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-[#85877e]">Special Request</p>
+                          <p className="mt-0.5 text-[#555d52]">{reservation.specialRequest}</p>
+                        </div>
+                      )}
+
+                      {reservation.policyVersion && (
+                        <div className="mt-3 flex items-center gap-2 text-[11px] text-[#777d73]">
+                          <span className="text-[#244b38] font-bold">✓</span>
+                          <span>Accepted terms under Policy v{reservation.policyVersion}</span>
+                        </div>
+                      )}
+
                       <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[#eeece5] pt-5">
                         <Link
-                          href={`/restaurants/${reservation.restaurantId}`}
+                          href={`/restaurants/${frontendId}`}
                           className="inline-flex items-center gap-1 text-xs font-bold text-[#244b38] hover:text-[#183727] hover:underline"
                         >
                           <span>View restaurant menu &amp; details</span>
                           <span aria-hidden="true">↗</span>
                         </Link>
 
-                        {!isCancelled && (
+                        {!isCancelled && !isCompleted && (
                           <button
                             type="button"
                             disabled={isCancelling}
@@ -432,7 +516,7 @@ export default function ReservationsPage() {
           )}
 
           <p className="mt-8 text-center text-[10px] leading-relaxed text-[#999b92]">
-            Your reservations are retrieved from your Tablekeeper account.
+            Your reservations are retrieved securely from your Tablekeeper PostgreSQL database.
           </p>
         </div>
       </section>

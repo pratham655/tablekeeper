@@ -1,4 +1,4 @@
-﻿from sqlalchemy import select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password, verify_password
@@ -31,7 +31,7 @@ def register_user(db: Session, user_data: UserCreate) -> User:
         full_name=user_data.full_name.strip(),
         email=email,
         password_hash=hash_password(user_data.password),
-        role="customer",
+        role=user_data.role,
         is_active=True,
     )
 

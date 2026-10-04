@@ -61,6 +61,24 @@ class Restaurant(Base):
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True
     )
+    cancellation_hours: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=2, server_default="2"
+    )
+    late_arrival_minutes: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=15, server_default="15"
+    )
+    reservation_duration_minutes: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=90, server_default="90"
+    )
+    max_party_size: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=10, server_default="10"
+    )
+    policy_terms: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )
+    policy_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=1, server_default="1"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

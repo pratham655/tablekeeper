@@ -1,8 +1,9 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import Navbar from "../../../../components/Navbar";
 
 type Restaurant = {
   id: number;
@@ -136,13 +137,47 @@ export default function ReservationPage({
   const guests = searchParams.get("guests") || "2";
   const tableId = searchParams.get("table") || "T1";
   const tableSeats = searchParams.get("seats") || "4";
+  const tableName = searchParams.get("tableName") || `Table ${tableId}`;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [specialRequest, setSpecialRequest] = useState("");
+  const [policyAccepted, setPolicyAccepted] = useState(false);
+  const [policies, setPolicies] = useState<{
+    cancellation_hours: number;
+    late_arrival_minutes: number;
+    reservation_duration_minutes: number;
+    max_party_size: number;
+    policy_terms: string;
+    policy_version: number;
+  } | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const restaurantDbIds: Record<number, number> = {
+    1: 12,
+    2: 13,
+    3: 14,
+    4: 17,
+    5: 18,
+    6: 19,
+    7: 20,
+  };
+
+  useEffect(() => {
+    if (!restaurant) return;
+    const dbId = restaurantDbIds[restaurant.id];
+    if (dbId) {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+      fetch(`${apiUrl}/restaurants/${dbId}/policies`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data) setPolicies(data);
+        })
+        .catch(() => {});
+    }
+  }, [restaurant?.id]);
 
   if (!restaurant) {
     return (
@@ -248,6 +283,13 @@ export default function ReservationPage({
       return;
     }
 
+    if (!policyAccepted) {
+      setErrorMessage(
+        "Please review and accept the restaurant's booking and cancellation policies before confirming."
+      );
+      return;
+    }
+
     if (trimmedRequest.length > 500) {
       setErrorMessage("Special requests must be 500 characters or fewer.");
       return;
@@ -273,16 +315,6 @@ export default function ReservationPage({
       }
 
       // Frontend restaurant IDs mapped to existing database IDs.
-      const restaurantDbIds: Record<number, number> = {
-        1: 12,
-        2: 13,
-        3: 14,
-        4: 17,
-        5: 18,
-        6: 19,
-        7: 20,
-      };
-
       const restaurantDbId = restaurantDbIds[restaurant.id];
 
       if (!restaurantDbId) {
@@ -300,7 +332,8 @@ export default function ReservationPage({
         throw new Error("The selected reservation date or time is invalid.");
       }
 
-      const end = new Date(start.getTime() + 90 * 60 * 1000);
+      const durationMins = policies?.reservation_duration_minutes || 90;
+      const end = new Date(start.getTime() + durationMins * 60 * 1000);
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/reservations/`,
@@ -316,6 +349,12 @@ export default function ReservationPage({
             guest_count: guestCount,
             start_time: start.toISOString(),
             end_time: end.toISOString(),
+            customer_name: trimmedName,
+            customer_email: trimmedEmail,
+            customer_phone: normalizedPhone,
+            special_request: trimmedRequest || undefined,
+            policy_version_accepted: policies?.policy_version ?? 1,
+            accepted_policy_terms: policies?.policy_terms ?? "Standard restaurant booking policies applied.",
           }),
         }
       );
@@ -359,9 +398,9 @@ export default function ReservationPage({
         specialRequest: trimmedRequest,
         status: result.status,
         createdAt: result.created_at,
+        policyVersionAccepted: policies?.policy_version,
       };
 
-      // Preserve compatibility with existing My Reservations UI.
       try {
         const existingRaw = sessionStorage.getItem("pendingReservation");
         let reservationsList: typeof savedReservation[] = [];
@@ -425,43 +464,8 @@ export default function ReservationPage({
 
   return (
     <main className="min-h-screen bg-[#f8f7f2] text-[#20251f]">
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-[#e9e7df] bg-[#f8f7f2]/95 backdrop-blur-xl">
-        <div className="container-shell flex h-[76px] items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center gap-3"
-            aria-label="Tablekeeper home"
-          >
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#244b38] text-xl font-semibold text-white shadow-xs">
-              t.
-            </span>
-            <span>
-              <span className="block text-[19px] font-semibold leading-5 tracking-[-0.7px]">
-                tablekeeper
-              </span>
-              <span className="mt-1 hidden text-[9px] font-semibold uppercase tracking-[2px] text-[#85877d] sm:block">
-                A table worth keeping
-              </span>
-            </span>
-          </Link>
-
-          <nav className="flex items-center gap-4 sm:gap-7">
-            <Link
-              href="/"
-              className="text-xs font-semibold text-[#5a6258] transition hover:text-[#244b38]"
-            >
-              Discover
-            </Link>
-            <Link
-              href="/reservations"
-              className="rounded-full border border-[#d9ddd4] bg-white px-4 py-2 text-xs font-semibold transition hover:border-[#244b38] hover:bg-[#244b38] hover:text-white"
-            >
-              My reservations
-            </Link>
-          </nav>
-        </div>
-      </header>
+      {/* NAVBAR */}
+      <Navbar />
 
       <div className="container-shell pb-20 pt-8 sm:pt-10">
         {/* Breadcrumb */}
@@ -511,7 +515,7 @@ export default function ReservationPage({
             2
           </span>
           <span className="text-xs font-bold uppercase tracking-wider text-[#244b38]">
-            Step 2: Guest Details
+            Step 2: Guest Details &amp; Policies
           </span>
         </div>
 
@@ -632,9 +636,57 @@ export default function ReservationPage({
                   onChange={(e) => setSpecialRequest(e.target.value)}
                   placeholder="Celebrations, dietary preferences, or seating notes..."
                   maxLength={500}
-                  rows={4}
+                  rows={3}
                   className="mt-2 w-full resize-y rounded-xl border border-[#e0e3da] bg-[#fdfdfb] p-3.5 text-xs font-medium text-[#20251f] outline-none transition focus:border-[#244b38] focus:bg-white focus:ring-2 focus:ring-[#244b38]/10"
                 />
+              </div>
+
+              {/* RESTAURANT POLICY ACCEPTANCE CARD */}
+              <div className="mt-6 rounded-2xl border border-[#e0e6db] bg-[#f8faf6] p-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#244b38]">
+                    Restaurant Booking Policies {policies ? `(v${policies.policy_version})` : ""}
+                  </h3>
+                  <span className="rounded-full bg-[#e9eee6] px-2.5 py-0.5 text-[10px] font-semibold text-[#244b38]">
+                    Mandatory
+                  </span>
+                </div>
+
+                <div className="mt-3 space-y-2 text-xs text-[#555d52]">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#244b38] font-bold">✓</span>
+                    <span><strong>Cancellation:</strong> Free cancellation up to {policies?.cancellation_hours || 2} hours before your booking time.</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#244b38] font-bold">✓</span>
+                    <span><strong>Table Holding:</strong> Tables are held for {policies?.late_arrival_minutes || 15} minutes past booking time before release.</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#244b38] font-bold">✓</span>
+                    <span><strong>Reservation Duration:</strong> Dining window is allocated for {policies?.reservation_duration_minutes || 90} minutes.</span>
+                  </div>
+                </div>
+
+                {policies?.policy_terms && (
+                  <p className="mt-3 border-t border-[#e2e7dc] pt-2 text-[11px] italic text-[#697066]">
+                    "{policies.policy_terms}"
+                  </p>
+                )}
+
+                <label className="mt-4 flex items-start gap-3 cursor-pointer rounded-xl border border-[#d2dcd0] bg-white p-3.5 transition hover:border-[#244b38]">
+                  <input
+                    type="checkbox"
+                    checked={policyAccepted}
+                    onChange={(e) => {
+                      setPolicyAccepted(e.target.checked);
+                      setErrorMessage("");
+                    }}
+                    className="mt-0.5 h-4 w-4 rounded border-[#ccd3c8] text-[#244b38] focus:ring-[#244b38]"
+                  />
+                  <span className="text-xs font-medium text-[#20251f]">
+                    I have read, understood, and accept {restaurant.name}'s dining policies and terms.
+                  </span>
+                </label>
               </div>
 
               {/* Error */}
@@ -651,8 +703,8 @@ export default function ReservationPage({
               <button
                 type="button"
                 onClick={handleConfirmReservation}
-                disabled={isSubmitting}
-                className="mt-7 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#244b38] px-6 text-xs font-bold text-white shadow-xs transition hover:bg-[#183727] disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={isSubmitting || !policyAccepted}
+                className="mt-7 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#244b38] px-6 text-xs font-bold text-white shadow-xs transition hover:bg-[#183727] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSubmitting
                   ? "Processing booking..."
@@ -660,7 +712,7 @@ export default function ReservationPage({
               </button>
 
               <p className="mt-3 text-center text-[10px] text-[#8c9186]">
-                Your reservation details will be saved to Tablekeeper.
+                Your booking and policy acceptance will be recorded in Tablekeeper.
               </p>
             </div>
           </div>
@@ -713,7 +765,7 @@ export default function ReservationPage({
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[#777d73]">Selected table</span>
                 <span className="rounded-md bg-[#fbf6ea] px-2 py-0.5 font-bold text-[#8c6b32]">
-                  {tableId} (Seats {tableSeats})
+                  {tableName} (Seats {tableSeats})
                 </span>
               </div>
             </div>

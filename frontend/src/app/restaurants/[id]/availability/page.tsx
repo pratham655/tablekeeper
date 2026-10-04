@@ -3,7 +3,8 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import RestaurantFloorPlan from "../../../../components/RestaurantFloorPlan";
+import RestaurantFloorPlan, { RestaurantTable } from "../../../../components/RestaurantFloorPlan";
+import Navbar from "../../../../components/Navbar";
 
 const restaurantNames: Record<string, string> = {
   "1": "The Olive Table",
@@ -81,6 +82,7 @@ function AvailabilityContent() {
     getSafeGuests(searchParams.get("guests"))
   );
 
+  const [selectedTable, setSelectedTable] = useState<RestaurantTable | null>(null);
   const [selectedTableId, setSelectedTableId] = useState(
     searchParams.get("table") || ""
   );
@@ -197,22 +199,26 @@ function AvailabilityContent() {
   const handleDateChange = (value: string) => {
     setDate(value);
     setSelectedTableId("");
+    setSelectedTable(null);
     setError("");
   };
 
   const handleTimeChange = (value: string) => {
     setTime(value);
     setSelectedTableId("");
+    setSelectedTable(null);
     setError("");
   };
 
   const handleGuestsChange = (value: string) => {
     setGuests(Number(value));
     setSelectedTableId("");
+    setSelectedTable(null);
     setError("");
   };
 
-  const handleTableSelect = (table: { id: string }) => {
+  const handleTableSelect = (table: RestaurantTable) => {
+    setSelectedTable(table);
     setSelectedTableId(table.id);
     setError("");
   };
@@ -245,6 +251,8 @@ function AvailabilityContent() {
       time,
       guests: String(guests),
       table: selectedTableId,
+      seats: String(selectedTable?.capacity || 4),
+      tableName: selectedTable?.name || `Table ${selectedTableId}`,
     });
 
     router.push(
@@ -254,39 +262,8 @@ function AvailabilityContent() {
 
   return (
     <main className="min-h-screen bg-[#f8f7f2] text-[#20251f]">
-      {/* HEADER */}
-      <header className="sticky top-0 z-40 border-b border-[#e9e7df] bg-[#f8f7f2]/95 backdrop-blur-xl">
-        <div className="container-shell flex h-[76px] items-center justify-between">
-          <Link href="/" className="flex items-center gap-3" aria-label="Tablekeeper home">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#244b38] text-xl font-semibold text-white shadow-xs">
-              t.
-            </span>
-            <span>
-              <span className="block text-[19px] font-semibold leading-5 tracking-[-0.7px]">
-                tablekeeper
-              </span>
-              <span className="mt-1 hidden text-[9px] font-semibold uppercase tracking-[2px] text-[#85877d] sm:block">
-                A table worth keeping
-              </span>
-            </span>
-          </Link>
-
-          <nav className="flex items-center gap-4 sm:gap-7">
-            <Link
-              href="/"
-              className="text-xs font-semibold text-[#5a6258] transition hover:text-[#244b38]"
-            >
-              Discover
-            </Link>
-            <Link
-              href="/reservations"
-              className="rounded-full border border-[#d9ddd4] bg-white px-4 py-2 text-xs font-semibold transition hover:border-[#244b38] hover:bg-[#244b38] hover:text-white"
-            >
-              My reservations
-            </Link>
-          </nav>
-        </div>
-      </header>
+      {/* NAVBAR */}
+      <Navbar />
 
       <div className="container-shell pb-20 pt-8 sm:pt-10">
         {/* Breadcrumb navigation */}

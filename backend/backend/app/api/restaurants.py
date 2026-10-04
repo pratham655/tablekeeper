@@ -1,5 +1,4 @@
 from typing import Literal
-from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
@@ -10,6 +9,8 @@ from app.models.restaurant import Restaurant
 from app.models.user import User
 from app.schemas.restaurant import (
     RestaurantCreate,
+    RestaurantPolicyResponse,
+    RestaurantPolicyUpdate,
     RestaurantResponse,
     RestaurantUpdate,
 )
@@ -18,7 +19,10 @@ from app.services.restaurant_service import (
     OwnerNotFoundError,
     RestaurantNotFoundError,
     create_restaurant,
+    get_owner_restaurants,
+    get_restaurant_policies,
     update_restaurant,
+    update_restaurant_policies,
 )
 
 router = APIRouter(
@@ -99,6 +103,19 @@ def get_restaurants(
 
 
 @router.get(
+    "/owned",
+    response_model=list[RestaurantResponse],
+    status_code=status.HTTP_200_OK,
+)
+def get_my_owned_restaurants(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("owner")),
+):
+    """Get all restaurants belonging to the authenticated owner."""
+    return get_owner_restaurants(db, owner_id=current_user.id)
+
+
+@router.get(
     "/{restaurant_id}",
     response_model=RestaurantResponse,
     status_code=status.HTTP_200_OK,
@@ -122,6 +139,51 @@ def get_restaurant(
         )
 
     return restaurant
+
+
+@router.get(
+    "/{restaurant_id}/policies",
+    response_model=RestaurantPolicyResponse,
+    status_code=status.HTTP_200_OK,
+)
+def get_policies(
+    restaurant_id: int,
+    db: Session = Depends(get_db),
+):
+    """Get the booking & cancellation policies for a restaurant."""
+    try:
+        return get_restaurant_policies(db, restaurant_id)
+    except RestaurantNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Restaurant not found",
+        )
+
+
+@router.put(
+    "/{restaurant_id}/policies",
+    response_model=RestaurantPolicyResponse,
+    status_code=status.HTTP_200_OK,
+)
+def update_policies(
+    restaurant_id: int,
+    policy_data: RestaurantPolicyUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("owner")),
+):
+    """Update booking policies for an owned restaurant."""
+    try:
+        return update_restaurant_policies(
+            db=db,
+            restaurant_id=restaurant_id,
+            owner_id=current_user.id,
+            policy_data=policy_data,
+        )
+    except RestaurantNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Restaurant not found or unauthorized",
+        )
 
 
 @router.post(

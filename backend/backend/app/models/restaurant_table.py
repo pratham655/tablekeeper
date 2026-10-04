@@ -61,6 +61,13 @@ class RestaurantTable(Base):
         default=True,
     )
 
+    status: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+        default="available",
+        server_default="available",
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

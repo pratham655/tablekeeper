@@ -1,21 +1,21 @@
-
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { AuthProvider } from "../context/AuthContext";
 
 export const metadata: Metadata = {
   title: {
-    default: "Tablekeeper | Find Your Table",
+    default: "Tablekeeper | A Table Worth Keeping",
     template: "%s | Tablekeeper",
   },
   description:
-    "Discover restaurants, explore dining experiences, and reserve your table with Tablekeeper.",
+    "Discover curated dining, select your exact table from interactive floor plans, and reserve seamlessly with Tablekeeper.",
   applicationName: "Tablekeeper",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#f8f7f2",
+  themeColor: "#244b38",
 };
 
 export default function RootLayout({
@@ -25,7 +25,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="antialiased selection:bg-[#244b38] selection:text-white">
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

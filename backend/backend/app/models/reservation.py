@@ -28,7 +28,7 @@ class Reservation(Base):
             name="ck_reservation_time",
         ),
         CheckConstraint(
-            "status IN ('pending', 'confirmed', 'cancelled')",
+            "status IN ('pending', 'confirmed', 'cancelled', 'seated', 'completed')",
             name="ck_reservation_status",
         ),
         UniqueConstraint(
@@ -85,6 +85,30 @@ class Reservation(Base):
         index=True,
     )
 
+    customer_name: Mapped[str | None] = mapped_column(
+        String(150), nullable=True
+    )
+
+    customer_email: Mapped[str | None] = mapped_column(
+        String(255), nullable=True
+    )
+
+    customer_phone: Mapped[str | None] = mapped_column(
+        String(50), nullable=True
+    )
+
+    special_request: Mapped[str | None] = mapped_column(
+        String(500), nullable=True
+    )
+
+    policy_version_accepted: Mapped[int | None] = mapped_column(
+        Integer, nullable=True
+    )
+
+    accepted_policy_terms: Mapped[str | None] = mapped_column(
+        String(1000), nullable=True
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -111,4 +135,10 @@ class Reservation(Base):
     user: Mapped["User"] = relationship(
         "User",
         back_populates="reservations",
+    )
+
+    assignment_history: Mapped[list["TableAssignmentHistory"]] = relationship(
+        "TableAssignmentHistory",
+        back_populates="reservation",
+        cascade="all, delete-orphan",
     )

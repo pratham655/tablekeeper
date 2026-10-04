@@ -3,7 +3,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from app.core.database import Base, DATABASE_URL
+from app.core.database import Base, SAFE_DATABASE_URL
 import app.models  # Register all SQLAlchemy models
 
 config = context.config
@@ -11,10 +11,10 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-if not DATABASE_URL:
+if not SAFE_DATABASE_URL:
     raise RuntimeError("DATABASE_URL is not configured")
 
-config.set_main_option("sqlalchemy.url", DATABASE_URL.replace("%", "%%"))
+config.set_main_option("sqlalchemy.url", SAFE_DATABASE_URL.replace("%", "%%"))
 
 target_metadata = Base.metadata
 
