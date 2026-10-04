@@ -1,0 +1,487 @@
+@import "tailwindcss";
+
+/* ========== Design Tokens ========== */
+
+:root {
+  --background: #f8f7f2;
+  --foreground: #20251f;
+  --green: #244b38;
+  --green-dark: #183727;
+  --green-light: #e9efe8;
+  --muted: #777d73;
+  --border: #e7e5dc;
+  --cream: #f1efe6;
+  --citrus: #d9b66b;
+  --gold: #b48a43;
+  --mint: #b8cdb6;
+  --card: #ffffff;
+  --font-editorial: Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+/* Exposes tokens as Tailwind utilities: bg-green, text-muted, border-border, ... */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-green: var(--green);
+  --color-green-dark: var(--green-dark);
+  --color-green-light: var(--green-light);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-cream: var(--cream);
+  --color-citrus: var(--citrus);
+  --color-gold: var(--gold);
+  --color-mint: var(--mint);
+  --color-card: var(--card);
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-editorial: var(--font-editorial);
+}
+
+/* ========== Global Reset ========== */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 90px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  position: relative;
+  isolation: isolate;
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 8% 12%, rgba(201, 219, 190, 0.18), transparent 32%),
+    radial-gradient(ellipse at 92% 30%, rgba(229, 204, 145, 0.13), transparent 30%),
+    var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Background decoration */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.45;
+  background-image:
+    radial-gradient(circle at 7% 23%, rgba(184, 205, 182, 0.24) 0 3px, transparent 4px),
+    radial-gradient(circle at 92% 18%, rgba(217, 182, 107, 0.22) 0 5px, transparent 6px),
+    radial-gradient(circle at 88% 78%, rgba(184, 205, 182, 0.2) 0 4px, transparent 5px),
+    radial-gradient(circle at 12% 85%, rgba(217, 182, 107, 0.16) 0 4px, transparent 5px);
+}
+
+/* ========== Base Elements ========== */
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: #d8e5d8;
+  color: var(--green-dark);
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d8dcd3;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b8c0b2;
+}
+
+/* ========== Shared Layout ========== */
+
+.container-shell {
+  width: min(1200px, calc(100% - 48px));
+  margin-inline: auto;
+}
+
+.surface {
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--card);
+}
+
+.soft-shadow {
+  box-shadow: 0 12px 40px rgba(30, 45, 32, 0.07);
+}
+
+.font-editorial {
+  font-family: var(--font-editorial);
+  letter-spacing: -0.035em;
+}
+
+.section-eyebrow {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.section-title {
+  font-family: var(--font-editorial);
+  font-size: clamp(28px, 3vw + 12px, 44px);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+/* ========== Buttons ========== */
+
+.btn-primary,
+.btn-secondary,
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 180ms ease;
+}
+
+.btn-primary {
+  min-height: 46px;
+  padding: 0 24px;
+  border: 1px solid var(--green);
+  background: var(--green);
+  color: #ffffff;
+}
+
+.btn-secondary {
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--foreground);
+}
+
+.btn-outline {
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid #d9ddd4;
+  background: transparent;
+  color: var(--foreground);
+}
+
+.btn-primary:active,
+.btn-secondary:active,
+.btn-outline:active {
+  transform: scale(0.98);
+}
+
+/* ========== Form Fields ========== */
+
+.field {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  outline: none;
+  background: #ffffff;
+  color: var(--foreground);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.field:focus {
+  border-color: #55735b;
+  box-shadow: 0 0 0 3px rgba(85, 115, 91, 0.15);
+}
+
+/* ========== Accessible Focus ========== */
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #55735b;
+  outline-offset: 2px;
+}
+
+/* ========== Cards ========== */
+
+article.group,
+.card-hover {
+  overflow: hidden;
+  transition:
+    transform 240ms ease,
+    box-shadow 240ms ease,
+    border-color 240ms ease;
+}
+
+article.group img,
+.card-hover img {
+  transition: transform 500ms ease;
+}
+
+.interactive-card {
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+
+.interactive-card:active {
+  transform: scale(0.99);
+}
+
+/* ========== Hover States (hover-capable devices only) ========== */
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    background: var(--green-dark);
+    box-shadow: 0 8px 22px rgba(24, 55, 39, 0.2);
+  }
+
+  .btn-secondary:hover {
+    transform: translateY(-1px);
+    border-color: #a9b6a8;
+    background: #fbfbf9;
+    box-shadow: 0 5px 16px rgba(30, 45, 32, 0.06);
+  }
+
+  .btn-outline:hover {
+    border-color: var(--green);
+    background: var(--green);
+    color: #ffffff;
+  }
+
+  article.group:hover,
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 40px rgba(30, 45, 32, 0.09);
+  }
+
+  article.group:hover img,
+  .card-hover:hover img {
+    transform: scale(1.04);
+  }
+
+  .interactive-card:hover {
+    transform: translateY(-3px);
+    border-color: #cbd8c9;
+    box-shadow: 0 14px 34px rgba(30, 45, 32, 0.08);
+  }
+}
+
+/* ========== Motion Utilities ========== */
+
+.motion-fade-in {
+  animation: fade-in 400ms ease both;
+}
+
+.motion-rise-in {
+  animation: rise-in 500ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.float-decoration {
+  animation: gentle-float 6s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gentle-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(1.5deg); }
+}
+
+/* ========== Citrus Decoration ========== */
+
+.citrus-decoration {
+  position: relative;
+  border: 4px solid rgba(217, 182, 107, 0.45);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(247, 224, 167, 0.2) 0 25%, transparent 26%),
+    conic-gradient(
+      from 0deg,
+      rgba(217, 182, 107, 0.16) 0deg 45deg,
+      rgba(255, 255, 255, 0.24) 45deg 90deg,
+      rgba(217, 182, 107, 0.16) 90deg 135deg,
+      rgba(255, 255, 255, 0.24) 135deg 180deg,
+      rgba(217, 182, 107, 0.16) 180deg 225deg,
+      rgba(255, 255, 255, 0.24) 225deg 270deg,
+      rgba(217, 182, 107, 0.16) 270deg 315deg,
+      rgba(255, 255, 255, 0.24) 315deg 360deg
+    );
+}
+
+/* ========== Leaflet Map Markers & Popup Styling ========== */
+
+.tablekeeper-map-marker-wrap {
+  background: transparent !important;
+  border: none !important;
+}
+
+.tablekeeper-map-marker {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #244b38;
+  border: 2px solid #ffffff;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 4px 14px rgba(24, 55, 39, 0.35);
+  transition: transform 180ms ease, background-color 180ms ease;
+  cursor: pointer;
+}
+
+.tablekeeper-map-marker > span {
+  display: block;
+  width: 10px;
+  height: 10px;
+  background: #d9b66b;
+  border-radius: 50%;
+  transform: rotate(45deg);
+}
+
+.tablekeeper-map-marker:hover {
+  transform: rotate(-45deg) scale(1.15);
+  background: #183727;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 18px !important;
+  padding: 4px !important;
+  box-shadow: 0 16px 36px rgba(24, 55, 39, 0.14) !important;
+  border: 1px solid #e7e5dc !important;
+  background: #ffffff !important;
+}
+
+.leaflet-popup-content {
+  margin: 10px !important;
+  line-height: 1.4 !important;
+}
+
+.leaflet-popup-tip {
+  background: #ffffff !important;
+}
+
+.marker-cluster {
+  background-color: rgba(36, 75, 56, 0.2) !important;
+}
+
+.marker-cluster div {
+  background-color: #244b38 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+}
+
+/* ========== Responsive ========== */
+
+@media (min-width: 1440px) {
+  .container-shell {
+    width: min(1240px, calc(100% - 96px));
+  }
+}
+
+@media (max-width: 768px) {
+  .container-shell {
+    width: calc(100% - 32px);
+  }
+
+  .surface {
+    border-radius: 18px;
+  }
+}
+
+@media (max-width: 640px) {
+  .container-shell {
+    width: calc(100% - 24px);
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    min-height: 44px;
+  }
+}
+
+/* ========== Reduced Motion ========== */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  .btn-primary:active,
+  .btn-secondary:active,
+  article.group:hover,
+  .card-hover:hover,
+  .interactive-card:hover,
+  .interactive-card:active,
+  article.group:hover img,
+  .card-hover:hover img {
+    transform: none;
+  }
+}

@@ -1,0 +1,21 @@
+﻿services:
+  db:
+    image: postgres:16
+    container_name: tablekeeper-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tablekeeper
+      POSTGRES_USER: tablekeeper
+      POSTGRES_PASSWORD: tablekeeper_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - tablekeeper_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tablekeeper -d tablekeeper"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  tablekeeper_pgdata:
