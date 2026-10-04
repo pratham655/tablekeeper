@@ -53,7 +53,7 @@ const preferences: { id: Preference; label: string; description: string }[] = [
 function scoreRestaurant(r: Restaurant, preference: Preference) {
   const tags = r.tags.join(" ").toLowerCase();
   const cuisine = r.cuisine.toLowerCase();
-  const priceLevel = (r.price.match(/₹/g) || []).length;
+ const priceLevel = (String(r.price ?? "").match(/₹/g) || []).length;
   let score = r.rating > 0 ? r.rating * 10 : 0;
   let reason =
     r.rating > 0
@@ -203,7 +203,9 @@ export default function PersonalizedRanking({
                     )}
                   </div>
                   <p className="mt-1 text-[11px] text-[#85877e]">
-                    {r.cuisine} <span className="mx-1">·</span> {r.location.split(",")[0]}
+                    {r.cuisine ?? "Multi-cuisine"}
+                    <span className="mx-1">·</span>
+                    {(r.location ?? "Location unavailable").split(",")[0]}
                     {r.price !== "—" ? ` · ${r.price}` : ""}
                   </p>
                   <p className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-[#666d62]">

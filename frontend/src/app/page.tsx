@@ -20,6 +20,20 @@ type Restaurant = {
   tags: string[];
 };
 
+// Shape returned by the API.
+type ApiRestaurant = {
+  id: number;
+  name: string;
+  description?: string;
+  address?: string;
+  city?: string;
+  cuisine?: string;
+  price_range?: string;
+  image_url?: string;
+  rating?: number;
+  reviews?: number;
+};
+
 type RestaurantMapProps = {
   restaurants: Restaurant[];
 };
@@ -113,15 +127,25 @@ export default function Home() {
           throw new Error("Failed to load restaurants.");
         }
 
-        const data = (await response.json()) as Omit<Restaurant, "tags">[];
+        const data = (await response.json()) as ApiRestaurant[];
+
+        const normalizedRestaurants: Restaurant[] = data.map((r) => ({
+          id: r.id,
+          name: r.name,
+          cuisine: r.cuisine ?? "Multi-cuisine",
+          location: r.address ?? r.city ?? "Bengaluru",
+          price: r.price_range ?? "—",
+          image: r.image_url ?? "/images/restaurant-placeholder.jpg",
+          rating:
+            typeof r.rating === "number" && Number.isFinite(r.rating)
+              ? r.rating
+              : 0,
+          reviews: r.reviews ?? 0,
+          tags: restaurantTags[r.id] ?? [],
+        }));
 
         if (isMounted) {
-          setRestaurants(
-            data.map((restaurant) => ({
-              ...restaurant,
-              tags: restaurantTags[restaurant.id] ?? [],
-            }))
-          );
+          setRestaurants(normalizedRestaurants);
         }
       } catch (error) {
         console.error("Restaurant fetch error:", error);
@@ -544,7 +568,9 @@ export default function Home() {
                     {/* Rating Badge */}
                     <span className="absolute right-3.5 top-3.5 flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold text-[#20251f] shadow-xs backdrop-blur-xs">
                       <span className="text-[#b48a43]">★</span>{" "}
-                      {restaurant.rating.toFixed(1)}
+                      {restaurant.rating > 0
+                        ? restaurant.rating.toFixed(1)
+                        : "New"}
                     </span>
 
                     {/* Corner hover circle */}
