@@ -29,16 +29,16 @@ type Props = {
 
 // Frontend restaurant IDs mapped to actual PostgreSQL IDs.
 const RESTAURANT_DB_IDS: Record<string, number> = {
-  "1": 12, // The Olive Table
-  "2": 13, // Spice Route
-  "3": 14, // Sakura House
-  "4": 17, // Casa Verde
-  "5": 18, // The Terrace
-  "6": 19, // Chai & Co.
-  "7": 20, // DRUMA
+  "1": 1, // The Olive Table
+  "2": 2, // Spice Route
+  "3": 3, // Sakura House
+  "4": 4, // Casa Verde
+  "5": 5, // The Terrace
+  "6": 6, // Chai & Co.
+  "7": 7, // DRUMA
 };
 
-const VALID_DB_IDS = new Set([12, 13, 14, 17, 18, 19, 20]);
+const VALID_DB_IDS = new Set([1, 2, 3, 4, 5, 6, 7]);
 
 const API_URL = (
   process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
