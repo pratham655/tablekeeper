@@ -644,16 +644,6 @@ export default function RestaurantDetailsPage() {
 
   // The production database was freshly seeded with restaurant IDs 1–7.
   // Keep the frontend IDs aligned with the live backend IDs.
-  const restaurantDbIds: Record<string, number> = {
-    "1": 1,
-    "2": 2,
-    "3": 3,
-    "4": 4,
-    "5": 5,
-    "6": 6,
-    "7": 7,
-  };
-
   // Support both existing frontend IDs (1–7) and database IDs (12–20).
   const restaurant = restaurants.find(
     (item) => item.id === routeId || String(restaurantDbIds[item.id]) === routeId
@@ -693,7 +683,7 @@ export default function RestaurantDetailsPage() {
 
     if (!restaurant) return;
 
-    const dbId = restaurantDbIds[restaurant.id];
+    const dbId = restaurant.id;
 
     if (dbId) {
 
