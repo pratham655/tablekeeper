@@ -16,16 +16,6 @@ const restaurantNames: Record<string, string> = {
   "7": "DRUMA",
 };
 
-const restaurantDbIds: Record<string, number> = {
-  "1": 1,
-  "2": 2,
-  "3": 3,
-  "4": 4,
-  "5": 5,
-  "6": 6,
-  "7": 7,
-};
-
 const reservationTimes = [
   { value: "12:00", label: "12:00 PM" },
   { value: "12:30", label: "12:30 PM" },
@@ -94,7 +84,7 @@ function AvailabilityContent() {
   const [availabilityError, setAvailabilityError] = useState("");
 
   useEffect(() => {
-    const backendRestaurantId = restaurantDbIds[restaurantId];
+    const backendRestaurantId = Number(restaurantId);
 
     if (!backendRestaurantId || !date || !time || guests < 1) {
       setUnavailableTableIds([]);
