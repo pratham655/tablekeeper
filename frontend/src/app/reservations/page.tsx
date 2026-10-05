@@ -46,24 +46,24 @@ type Reservation = {
 };
 
 const RESTAURANTS: Record<number, string> = {
-  12: "The Olive Table",
-  13: "Spice Route",
-  14: "Sakura House",
-  17: "Casa Verde",
-  18: "The Terrace",
-  19: "Chai & Co.",
-  20: "DRUMA",
+  1: "The Olive Table",
+  2: "Spice Route",
+  3: "Sakura House",
+  4: "Casa Verde",
+  5: "The Terrace",
+  6: "Chai & Co.",
+  7: "DRUMA",
 };
 
-// Map backend db IDs to frontend restaurant IDs for navigation
+// Current production PostgreSQL restaurant IDs are 1–7.
 const DB_TO_FRONTEND_ID: Record<number, number> = {
-  12: 1,
-  13: 2,
-  14: 3,
-  17: 4,
-  18: 5,
-  19: 6,
-  20: 7,
+  1: 1,
+  2: 2,
+  3: 3,
+  4: 4,
+  5: 5,
+  6: 6,
+  7: 7,
 };
 
 function formatDate(dateString: string) {
