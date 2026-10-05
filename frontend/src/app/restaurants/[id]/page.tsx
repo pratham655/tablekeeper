@@ -642,14 +642,16 @@ export default function RestaurantDetailsPage() {
 
   const routeId = String(params.id);
 
+  // The production database was freshly seeded with restaurant IDs 1–7.
+  // Keep the frontend IDs aligned with the live backend IDs.
   const restaurantDbIds: Record<string, number> = {
-    "1": 12,
-    "2": 13,
-    "3": 14,
-    "4": 17,
-    "5": 18,
-    "6": 19,
-    "7": 20,
+    "1": 1,
+    "2": 2,
+    "3": 3,
+    "4": 4,
+    "5": 5,
+    "6": 6,
+    "7": 7,
   };
 
   // Support both existing frontend IDs (1–7) and database IDs (12–20).
