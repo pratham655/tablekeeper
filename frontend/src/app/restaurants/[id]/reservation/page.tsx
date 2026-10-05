@@ -155,14 +155,16 @@ export default function ReservationPage({
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // The production database is the fresh Tablekeeper database.
+  // Restaurant IDs are 1–7 and must match the current backend.
   const restaurantDbIds: Record<number, number> = {
-    1: 12,
-    2: 13,
-    3: 14,
-    4: 17,
-    5: 18,
-    6: 19,
-    7: 20,
+    1: 1,
+    2: 2,
+    3: 3,
+    4: 4,
+    5: 5,
+    6: 6,
+    7: 7,
   };
 
   useEffect(() => {
@@ -314,7 +316,7 @@ export default function ReservationPage({
         return;
       }
 
-      // Frontend restaurant IDs mapped to existing database IDs.
+      // Frontend restaurant IDs mapped to the fresh production database IDs.
       const restaurantDbId = restaurantDbIds[restaurant.id];
 
       if (!restaurantDbId) {
