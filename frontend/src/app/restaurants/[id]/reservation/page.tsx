@@ -157,7 +157,7 @@ export default function ReservationPage({
 
   useEffect(() => {
     if (!restaurant) return;
-    const dbId = restaurantDbIds[restaurant.id];
+    const dbId = Number(restaurant.id);
     if (dbId) {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
       fetch(`${apiUrl}/restaurants/${dbId}/policies`)
